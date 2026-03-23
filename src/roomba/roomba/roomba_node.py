@@ -48,8 +48,9 @@ class RoombaNode(Node):
         self.prev_odom_time = None
         
         # Roomba kinematics constants
-        self.wheelbase = 0.235  # meters
-        self.wheel_diameter = 0.072  # meters
+        # Calibrated against 0.96m physical linear run (1.28m odom) = 0.75 ratio
+        self.wheelbase = 0.2406  # meters (effective track width)
+        self.wheel_diameter = 0.054  # meters (calibrated diameter)
         self.ticks_per_rev = 508.8
         self.meters_per_tick = (math.pi * self.wheel_diameter) / self.ticks_per_rev
         
@@ -66,14 +67,16 @@ class RoombaNode(Node):
         Converts Twist messages to Roomba drive commands.
         Using drive_direct for better differential control, including turn-in-place.
         """
-        wheelbase_mm = 235.0
+        wheelbase_mm = 240.6
+        # Firmware speed math overestimates physical travel (1.28m internal vs 0.96m real)
+        speed_multiplier = 0.072 / 0.054 
         
-        v_mm = msg.linear.x * 1000.0  # convert m/s to mm/s
-        w = msg.angular.z             # rad/s
+        v_mm = (msg.linear.x * 1000.0) * speed_multiplier
+        w_scaled = msg.angular.z * speed_multiplier
         
         # Calculate left and right wheel velocities
-        right_vel = int(v_mm + (w * wheelbase_mm / 2.0))
-        left_vel = int(v_mm - (w * wheelbase_mm / 2.0))
+        right_vel = int(v_mm + (w_scaled * wheelbase_mm / 2.0))
+        left_vel = int(v_mm - (w_scaled * wheelbase_mm / 2.0))
         
         # Clamp velocities to -500 to 500 mm/s (as specified in the Open Interface)
         right_vel = max(-500, min(500, right_vel))
