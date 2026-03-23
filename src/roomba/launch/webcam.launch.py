@@ -13,12 +13,12 @@ def generate_launch_description():
                 'image_size': [640, 480],
                 'framerate': 30,
                 'pixel_format': 'YUYV',
+                'qos_overrides./image_raw.publisher.reliability': 'best_effort',
+                'qos_overrides./image_raw.publisher.history': 'keep_last',
+                'qos_overrides./image_raw.publisher.depth': 1,
+                'qos_overrides./camera_info.publisher.reliability': 'best_effort',
+                'qos_overrides./camera_info.publisher.history': 'keep_last',
+                'qos_overrides./camera_info.publisher.depth': 1,
             }],
-            arguments=[
-                '--ros-args',
-                '--qos-reliability', 'best_effort',
-                '--qos-history', 'keep_last',
-                '--qos-depth', '1',
-            ],
         )
     ])
