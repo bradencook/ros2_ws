@@ -67,16 +67,14 @@ class RoombaNode(Node):
         Converts Twist messages to Roomba drive commands.
         Using drive_direct for better differential control, including turn-in-place.
         """
-        wheelbase_mm = 240.6
-        # Firmware speed math overestimates physical travel (1.28m internal vs 0.96m real)
-        speed_multiplier = 0.072 / 0.054 
+        wheelbase_mm = 235.0
         
-        v_mm = (msg.linear.x * 1000.0) * speed_multiplier
-        w_scaled = msg.angular.z * speed_multiplier
+        v_mm = msg.linear.x * 1000.0
+        w = msg.angular.z
         
         # Calculate left and right wheel velocities
-        right_vel = int(v_mm + (w_scaled * wheelbase_mm / 2.0))
-        left_vel = int(v_mm - (w_scaled * wheelbase_mm / 2.0))
+        right_vel = int(v_mm + (w * wheelbase_mm / 2.0))
+        left_vel = int(v_mm - (w * wheelbase_mm / 2.0))
         
         # Clamp velocities to -500 to 500 mm/s (as specified in the Open Interface)
         right_vel = max(-500, min(500, right_vel))
@@ -132,18 +130,16 @@ class RoombaNode(Node):
                 self.sensor_pub.publish(msg)
                 
                 # --- ODOMETRY COMPUTATION ---
-                left_enc_data = parsed.get("43")
-                right_enc_data = parsed.get("44")
+                dist_data = parsed.get("19")
+                angle_data = parsed.get("20")
                 
-                left_enc = left_enc_data.get("encoder_left") if isinstance(left_enc_data, dict) else None
-                right_enc = right_enc_data.get("encoder_right") if isinstance(right_enc_data, dict) else None
+                dist_mm = dist_data.get("distance_mm") if isinstance(dist_data, dict) else None
+                angle_deg = angle_data.get("angle_deg") if isinstance(angle_data, dict) else None
                 
-                if left_enc is not None and right_enc is not None:
+                if dist_mm is not None and angle_deg is not None:
                     current_ros_time = self.get_clock().now()
                     
-                    if self.prev_left_encoder is None or self.prev_odom_time is None:
-                        self.prev_left_encoder = left_enc
-                        self.prev_right_encoder = right_enc
+                    if self.prev_odom_time is None:
                         self.prev_odom_time = current_ros_time
                         continue
                         
@@ -151,29 +147,9 @@ class RoombaNode(Node):
                     self.prev_odom_time = current_ros_time
                     
                     if dt > 0:
-                        # Calculate delta ticks (handling 16-bit unsigned wraparound)
-                        d_left = left_enc - self.prev_left_encoder
-                        if d_left < -32768:
-                            d_left += 65536
-                        elif d_left > 32768:
-                            d_left -= 65536
-                            
-                        d_right = right_enc - self.prev_right_encoder
-                        if d_right < -32768:
-                            d_right += 65536
-                        elif d_right > 32768:
-                            d_right -= 65536
-                            
-                        self.prev_left_encoder = left_enc
-                        self.prev_right_encoder = right_enc
-                        
-                        # Convert to meters
-                        dist_left = d_left * self.meters_per_tick
-                        dist_right = d_right * self.meters_per_tick
-                        
-                        # Kinematics
-                        d_center = (dist_right + dist_left) / 2.0
-                        d_theta = (dist_right - dist_left) / self.wheelbase
+                        d_center = dist_mm / 1000.0
+                        # iRobot firmware defines CCW as positive, which matches ROS 2
+                        d_theta = angle_deg * (math.pi / 180.0)
                         
                         # Update state
                         self.x += d_center * math.cos(self.theta + (d_theta / 2.0))
