@@ -46,7 +46,13 @@ def generate_launch_description():
         output='screen',
         parameters=[
             os.path.join(get_package_share_directory('slam_toolbox'), 'config', 'mapper_params_online_async.yaml'),
-            {'use_sim_time': False}
+            {
+                'use_sim_time': False,
+                'odom_frame': 'odom',
+                'map_frame': 'map',
+                'base_frame': 'base_link',
+                'scan_topic': '/scan'
+            }
         ]
     )
 
