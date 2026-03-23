@@ -13,11 +13,14 @@ The core package that handles all interaction with the robot's hardware.
 - **`roomba_node`**: This is the main robot driver.
   - **Subscribes to:** `/cmd_vel` (`geometry_msgs/msg/Twist`) — Receives movement commands and converts them to left/right wheel velocities.
   - **Publishes to:** `/roomba/sensors` (`std_msgs/msg/String`) — Continuously publishes the latest sensor stream (Voltage, current, temperature, bumps, wheel drops) from the Roomba over an encoded JSON string.
+  - **Publishes to:** `/odom` (`nav_msgs/msg/Odometry`) — Publishes high-accuracy odometry using raw wheel encoder ticks.
+  - **TF:** Broadcasts the `odom` -> `base_link` transform.
   - **Hardware Interface:** Uses pyserial to talk to the Roomba over `/dev/serial/by-id/usb-FTDI_FT232R_USB_UART_BG03F056-if00-port0`.
 - **`roomba_teleop`**: A decoupled teleoperation node for driving the robot using a keyboard.
   - **Publishes to:** `/cmd_vel` — Sends Twist messages securely based on user input.
   - **Subscribes to:** `/roomba/sensors` — Decodes the telemetry string to display the live voltage and bump sensor status in your terminal while you drive.
 - **`webcam.launch.py`**: A launch script included in the `roomba` package to bring up the `v4l2_camera` node (publishing `/image_raw`) and a `web_video_server` to stream the video to a web browser.
+- **`mapping.launch.py`**: The definitive launch file for SLAM. Brings up the Roomba driver, LiDAR, webcam, `slam_toolbox`, and `foxglove_bridge` all at once to enable map building and debugging.
 
 ### 2. `rplidar_ros`
 The package handling the RPLidar C1 sensor.
@@ -62,36 +65,27 @@ Follow these steps when SSHing into your Raspberry Pi 5 to get the workspace bui
 
 ---
 
-## 🚀 How to Run the Robot
+## 🚀 How to Create a 3D Map (SLAM)
 
-You'll need multiple terminal tabs (or a tool like `tmux`) to launch the different components of the robot. Be sure to run steps 1, 2, and 4 (activate venv + source ros2 + source install) in **every new terminal**.
+Now that the robot publishes odometry, you can launch everything required for Foxglove debugging and SLAM mapping with a single command! Note: you will need multiple terminal tabs (or a tool like `tmux`). Be sure to activate your `venv` and source ROS 2 and your workspace in **every new terminal**.
 
-### Terminal 1: Start the Roomba Base
-The `roomba_node` must be running before you can drive.
+### Terminal 1: Launch the Mapping Stack
+This launch file handles bringing up the Roomba base, LiDAR, webcam, `slam_toolbox`, and the `foxglove_bridge`:
 ```bash
-ros2 run roomba roomba_node
+ros2 launch roomba mapping.launch.py
 ```
-*Note: The roomba might beep when the connection initializes.*
 
-### Terminal 2: Start the Sensors (LiDAR & Webcam)
-Launch the RPLidar and the V4L2 Webcam node to begin publishing `/scan` and `/image_raw`:
-```bash
-ros2 launch rplidar_ros rplidar_c1_custom.launch.py
-ros2 launch roomba webcam.launch.py
-```
-*(If you get resource busy errors, try running them in separate terminals)*
-
-**Viewing the Live Webcam Stream:**
-The `webcam.launch.py` file automatically starts a `web_video_server` alongside the camera node. Once it's running on your robot, you can view the live feed from any browser on the same network! Simply navigate to:
-`http://roomba.local:8080`.
-
-### Terminal 3: Teleoperation (Drive!)
-Run the newly refactored teleop script. You'll be able to use your arrow keys or `WASD` to drive the robot around while watching the live voltage output.
+### Terminal 2: Teleoperation (Drive!)
+Run the teleop script in a separate window so you can intercept keyboard input. You'll use your arrow keys or `WASD` to drive the robot around a room to build the map:
 ```bash
 ros2 run roomba roomba_teleop
 ```
 
-## 🗺 Next Steps: SLAM
-Because the robot is successfully publishing `/scan` (from RPLidar) and subscribing to `/cmd_vel` (via `roomba_node`), the workspace is almost completely ready for map building. 
-
-To enable SLAM (like `slam_toolbox`), the required missing link will be **Odometry (`/odom`)**, which estimates the robot's current position relative to its starting point. In the future, modifying `roomba_node` to calculate and publish `nav_msgs/msg/Odometry` based on the roomba's internal wheel encoders will complete the SLAM puzzle!
+### Visualizing in Foxglove Studio
+1. Turn on [Foxglove Studio](https://foxglove.dev/).
+2. Open a new connection and select **Foxglove WebSocket**. Use the default `ws://localhost:8765` if on the Pi directly, or `ws://roomba.local:8765` / `ws://<pi-ip-address>:8765` if on your Mac.
+3. Open a **3D Panel** to visualize:
+   - The `/map` and `/odom` TF transform frames.
+   - The `/scan` LaserScan data showing the LiDAR hitting walls.
+   - The live `slam_toolbox` map building actively as the robot drives.
+4. Open an **Image Panel** and subscribe to `/image_raw` to see your webcam feed!
