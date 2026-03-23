@@ -39,21 +39,14 @@ def generate_launch_description():
         output='screen'
     )
 
-    slam_toolbox = Node(
-        package='slam_toolbox',
-        executable='async_slam_toolbox_node',
-        name='slam_toolbox',
-        output='screen',
-        parameters=[
-            os.path.join(get_package_share_directory('slam_toolbox'), 'config', 'mapper_params_online_async.yaml'),
-            {
-                'use_sim_time': False,
-                'odom_frame': 'odom',
-                'map_frame': 'map',
-                'base_frame': 'base_link',
-                'scan_topic': '/scan'
-            }
-        ]
+    slam_toolbox = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(get_package_share_directory('slam_toolbox'), 'launch', 'online_async_launch.py')
+        ),
+        launch_arguments={
+            'use_sim_time': 'False',
+            'slam_params_file': os.path.join(get_package_share_directory('slam_toolbox'), 'config', 'mapper_params_online_async.yaml')
+        }.items()
     )
 
     # Static Transforms (Modify Z-heights or frames as needed for your physical robot)
@@ -70,6 +63,13 @@ def generate_launch_description():
         name='base_to_camera',
         arguments=['0.1', '0', '0.1', '0', '0', '0', 'base_link', 'camera_link']
     )
+    
+    static_tf_footprint = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='footprint_to_link',
+        arguments=['0', '0', '0', '0', '0', '0', 'base_footprint', 'base_link']
+    )
 
     return LaunchDescription([
         roomba_node,
@@ -78,5 +78,6 @@ def generate_launch_description():
         foxglove_bridge,
         slam_toolbox,
         static_tf_laser,
-        static_tf_camera
+        static_tf_camera,
+        static_tf_footprint
     ])

@@ -129,16 +129,18 @@ class RoombaNode(Node):
                 self.sensor_pub.publish(msg)
                 
                 # --- ODOMETRY COMPUTATION ---
-                dist_data = parsed.get("19")
-                angle_data = parsed.get("20")
+                left_enc_data = parsed.get("43")
+                right_enc_data = parsed.get("44")
                 
-                dist_mm = dist_data.get("distance_mm") if isinstance(dist_data, dict) else None
-                angle_deg = angle_data.get("angle_deg") if isinstance(angle_data, dict) else None
+                left_enc = left_enc_data.get("encoder_left") if isinstance(left_enc_data, dict) else None
+                right_enc = right_enc_data.get("encoder_right") if isinstance(right_enc_data, dict) else None
                 
-                if dist_mm is not None and angle_deg is not None:
+                if left_enc is not None and right_enc is not None:
                     current_ros_time = self.get_clock().now()
                     
-                    if self.prev_odom_time is None:
+                    if self.prev_left_encoder is None or self.prev_odom_time is None:
+                        self.prev_left_encoder = left_enc
+                        self.prev_right_encoder = right_enc
                         self.prev_odom_time = current_ros_time
                         continue
                         
@@ -146,17 +148,38 @@ class RoombaNode(Node):
                     self.prev_odom_time = current_ros_time
                     
                     if dt > 0:
-                        distance_m = dist_mm / 1000.0
-                        angle_rad = math.radians(angle_deg)
+                        # Calculate delta ticks (handling 16-bit unsigned wraparound)
+                        d_left = left_enc - self.prev_left_encoder
+                        if d_left < -32768:
+                            d_left += 65536
+                        elif d_left > 32768:
+                            d_left -= 65536
+                            
+                        d_right = right_enc - self.prev_right_encoder
+                        if d_right < -32768:
+                            d_right += 65536
+                        elif d_right > 32768:
+                            d_right -= 65536
+                            
+                        self.prev_left_encoder = left_enc
+                        self.prev_right_encoder = right_enc
+                        
+                        # Convert to meters
+                        dist_left = d_left * self.meters_per_tick
+                        dist_right = d_right * self.meters_per_tick
+                        
+                        # Kinematics
+                        d_center = (dist_right + dist_left) / 2.0
+                        d_theta = (dist_right - dist_left) / self.wheelbase
                         
                         # Update state
-                        self.theta += angle_rad
-                        self.x += distance_m * math.cos(self.theta - (angle_rad / 2.0))
-                        self.y += distance_m * math.sin(self.theta - (angle_rad / 2.0))
+                        self.x += d_center * math.cos(self.theta + (d_theta / 2.0))
+                        self.y += d_center * math.sin(self.theta + (d_theta / 2.0))
+                        self.theta += d_theta
                         
                         # Calculate speeds
-                        vx = distance_m / dt
-                        vth = angle_rad / dt
+                        vx = d_center / dt
+                        vth = d_theta / dt
                         
                         # Publish Odom & TF
                         time_msg = current_ros_time.to_msg()
