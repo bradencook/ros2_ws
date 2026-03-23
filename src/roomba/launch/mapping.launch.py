@@ -44,13 +44,10 @@ def generate_launch_description():
         executable='async_slam_toolbox_node',
         name='slam_toolbox',
         output='screen',
-        parameters=[{
-            'odom_frame': 'odom',
-            'map_frame': 'map',
-            'base_frame': 'base_link',
-            'scan_topic': '/scan',
-            'use_sim_time': False,
-        }]
+        parameters=[
+            os.path.join(get_package_share_directory('slam_toolbox'), 'config', 'mapper_params_online_async.yaml'),
+            {'use_sim_time': False}
+        ]
     )
 
     # Static Transforms (Modify Z-heights or frames as needed for your physical robot)
@@ -58,7 +55,7 @@ def generate_launch_description():
         package='tf2_ros',
         executable='static_transform_publisher',
         name='base_to_laser',
-        arguments=['0', '0', '0.2', '0', '0', '0', 'base_link', 'laser_frame']
+        arguments=['0', '0', '0.2', '0', '0', '0', 'base_link', 'laser']
     )
     
     static_tf_camera = Node(
