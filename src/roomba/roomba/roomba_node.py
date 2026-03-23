@@ -8,7 +8,7 @@ import json
 import time
 import logging
 
-from roomba.driver import drive, stream, pause_stream, startup, SENSOR_PACKETS, passive
+from roomba.driver import drive_direct, stream, pause_stream, startup, SENSOR_PACKETS, passive
 
 class RoombaNode(Node):
     def __init__(self):
@@ -42,25 +42,23 @@ class RoombaNode(Node):
     def cmd_vel_callback(self, msg: Twist):
         """
         Converts Twist messages to Roomba drive commands.
-        This example uses simple differential drive mapping:
-        - linear.x = forward/backward speed
-        - angular.z = rotation
+        Using drive_direct for better differential control, including turn-in-place.
         """
-        # Constants for converting Twist to Roomba drive
-        # Roomba radius for turning (mm) approximation
-        if msg.angular.z == 0:
-            radius = 32768  # straight
-        elif msg.linear.x == 0:
-            radius = 1 if msg.angular.z > 0 else -1  # turn in place
-        else:
-            radius = int(msg.linear.x / msg.angular.z * 1000)  # crude approximation
-
-        velocity = int(msg.linear.x * 1000)  # convert m/s to mm/s
-        velocity = max(-500, min(500, velocity))  # clamp
-        radius = max(-2000, min(2000, radius))    # clamp
+        wheelbase_mm = 235.0
+        
+        v_mm = msg.linear.x * 1000.0  # convert m/s to mm/s
+        w = msg.angular.z             # rad/s
+        
+        # Calculate left and right wheel velocities
+        right_vel = int(v_mm + (w * wheelbase_mm / 2.0))
+        left_vel = int(v_mm - (w * wheelbase_mm / 2.0))
+        
+        # Clamp velocities to -500 to 500 mm/s (as specified in the Open Interface)
+        right_vel = max(-500, min(500, right_vel))
+        left_vel = max(-500, min(500, left_vel))
 
         with self.serial_lock:
-            drive(velocity, radius)
+            drive_direct(left_vel, right_vel)
 
     def stream_sensors(self):
         """
