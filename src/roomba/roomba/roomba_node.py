@@ -217,13 +217,6 @@ class RoombaNode(Node):
                         odom.twist.twist.angular.z = vth
                         
                         self.odom_pub.publish(odom)
-                        
-                        # Debug print to confirm exactly when we publish!
-                        if not hasattr(self, 'odom_debug_cnt'):
-                            self.odom_debug_cnt = 0
-                        self.odom_debug_cnt += 1
-                        if self.odom_debug_cnt % 60 == 0:
-                            self.get_logger().info(f"Odom Update -> x: {self.x:.2f}, y: {self.y:.2f}, dt: {dt:.3f}")
                 
             except Exception as e:
                 if self.running:  # Only log error if not shutting down
