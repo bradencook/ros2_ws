@@ -496,5 +496,9 @@ def decode_packet(packet_id, data):
 
     elif packet_id == 26:
         return {"battery_capacity_mah": struct.unpack(">H", data)[0]}
+    elif packet_id == 52:
+        return {"ir_left": data[0]}
+    elif packet_id == 53:
+        return {"ir_right": data[0]}
 
     return {"raw": list(data)}

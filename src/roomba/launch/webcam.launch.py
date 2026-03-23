@@ -12,8 +12,13 @@ def generate_launch_description():
                 'video_device': '/dev/video0',
                 'image_size': [640, 480],
                 'framerate': 30,
-                'pixel_format': 'YUYV',  # stable format
-                'camera_calibration_url': 'file:///home/ubuntu/.ros/camera_info/innomaker-u20cam-1080p-s1:_inno.yaml'
-            }]
+                'pixel_format': 'YUYV',
+            }],
+            arguments=[
+                '--ros-args',
+                '--qos-reliability', 'best_effort',
+                '--qos-history', 'keep_last',
+                '--qos-depth', '1',
+            ],
         )
     ])
