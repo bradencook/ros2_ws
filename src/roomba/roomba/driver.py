@@ -439,8 +439,6 @@ SENSOR_PACKETS = [
     24,  # Temperature
     25,  # Battery charge
     26,  # Battery capacity
-    43,  # Left encoder counts
-    44,  # Right encoder counts
     52,  # IR Left
     53   # IR Right
 ]
@@ -457,8 +455,6 @@ PACKET_SIZES = {
     24: 1,
     25: 2,
     26: 2,
-    43: 2,
-    44: 2,
     52: 1,
     53: 1
 }
@@ -500,10 +496,6 @@ def decode_packet(packet_id, data):
 
     elif packet_id == 26:
         return {"battery_capacity_mah": struct.unpack(">H", data)[0]}
-    elif packet_id == 43:
-        return {"encoder_left": struct.unpack(">H", data)[0]}
-    elif packet_id == 44:
-        return {"encoder_right": struct.unpack(">H", data)[0]}
     elif packet_id == 52:
         return {"ir_left": data[0]}
     elif packet_id == 53:
