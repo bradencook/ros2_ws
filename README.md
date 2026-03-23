@@ -17,7 +17,7 @@ The core package that handles all interaction with the robot's hardware.
 - **`roomba_teleop`**: A decoupled teleoperation node for driving the robot using a keyboard.
   - **Publishes to:** `/cmd_vel` — Sends Twist messages securely based on user input.
   - **Subscribes to:** `/roomba/sensors` — Decodes the telemetry string to display the live voltage and bump sensor status in your terminal while you drive.
-- **`webcam.launch.py`**: A launch script included in the `roomba` package to bring up the `v4l2_camera` node and publish `/image_raw`.
+- **`webcam.launch.py`**: A launch script included in the `roomba` package to bring up the `v4l2_camera` node (publishing `/image_raw`) and a `web_video_server` to stream the video to a web browser.
 
 ### 2. `rplidar_ros`
 The package handling the RPLidar C1 sensor.
@@ -80,6 +80,10 @@ ros2 launch rplidar_ros rplidar_c1_custom.launch.py
 ros2 launch roomba webcam.launch.py
 ```
 *(If you get resource busy errors, try running them in separate terminals)*
+
+**Viewing the Live Webcam Stream:**
+The `webcam.launch.py` file automatically starts a `web_video_server` alongside the camera node. Once it's running on your robot, you can view the live feed from any browser on the same network! Simply navigate to:
+`http://roomba.local:8080`.
 
 ### Terminal 3: Teleoperation (Drive!)
 Run the newly refactored teleop script. You'll be able to use your arrow keys or `WASD` to drive the robot around while watching the live voltage output.

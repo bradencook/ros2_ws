@@ -20,5 +20,15 @@ def generate_launch_description():
                 'qos_overrides./camera_info.publisher.history': 'keep_last',
                 'qos_overrides./camera_info.publisher.depth': 1,
             }],
+        ),
+        Node(
+            package='web_video_server',
+            executable='web_video_server',
+            name='web_video_server',
+            output='screen',
+            parameters=[{
+                'port': 8080,
+                'address': '0.0.0.0',
+            }],
         )
     ])
