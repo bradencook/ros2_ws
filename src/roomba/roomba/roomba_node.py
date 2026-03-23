@@ -8,7 +8,7 @@ import json
 import time
 import logging
 
-from driver import drive, stream, pause_stream, startup, SENSOR_PACKETS
+from roomba.driver import drive, stream, pause_stream, startup, SENSOR_PACKETS
 
 class RoombaNode(Node):
     def __init__(self):
@@ -63,7 +63,7 @@ class RoombaNode(Node):
         """
         Continuously read Roomba sensor stream and publish as JSON.
         """
-        from driver import ser, PACKET_SIZES, decode_packet
+        from roomba.driver import ser, PACKET_SIZES, decode_packet
         import struct
         
         while True:
