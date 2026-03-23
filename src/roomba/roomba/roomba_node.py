@@ -8,7 +8,7 @@ import json
 import time
 import logging
 
-from roomba.driver import drive, stream, pause_stream, startup, SENSOR_PACKETS
+from roomba.driver import drive, stream, pause_stream, startup, SENSOR_PACKETS, passive
 
 class RoombaNode(Node):
     def __init__(self):
@@ -16,6 +16,9 @@ class RoombaNode(Node):
         
         # Lock for serial port access
         self.serial_lock = threading.Lock()
+        
+        # Flag to control background thread
+        self.running = True
 
         # Subscribe to cmd_vel to drive the robot
         self.sub = self.create_subscription(
@@ -66,7 +69,7 @@ class RoombaNode(Node):
         from roomba.driver import ser, PACKET_SIZES, decode_packet
         import struct
         
-        while True:
+        while self.running:
             try:
                 with self.serial_lock:
                     header = ser.read(1)
@@ -106,7 +109,8 @@ class RoombaNode(Node):
                 self.sensor_pub.publish(msg)
                 
             except Exception as e:
-                self.get_logger().error(f"Sensor read error: {e}")
+                if self.running:  # Only log error if not shutting down
+                    self.get_logger().error(f"Sensor read error: {e}")
                 time.sleep(0.1)
 
 
@@ -118,7 +122,10 @@ def main(args=None):
     except KeyboardInterrupt:
         pass
     finally:
+        node.running = False  # Signal thread to stop
         with node.serial_lock:
             pause_stream()
+            passive()  # Return roomba to passive mode
         node.destroy_node()
-        rclpy.shutdown()
+        if rclpy.ok():
+            rclpy.shutdown()
