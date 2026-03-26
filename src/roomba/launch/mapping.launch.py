@@ -45,7 +45,9 @@ def generate_launch_description():
         ),
         launch_arguments={
             'use_sim_time': 'False',
-            'slam_params_file': os.path.join(get_package_share_directory('slam_toolbox'), 'config', 'mapper_params_online_async.yaml')
+            'slam_params_file': os.path.join(get_package_share_directory('slam_toolbox'), 'config', 'mapper_params_online_async.yaml'),
+            'base_frame': 'base_link',
+            
         }.items()
     )
 
