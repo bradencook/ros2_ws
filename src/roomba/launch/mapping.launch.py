@@ -3,83 +3,36 @@ from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch_ros.actions import Node
+
 
 def generate_launch_description():
-    # Directories
+    """Mapping mode: bringup + SLAM Toolbox (online async)."""
     roomba_dir = get_package_share_directory('roomba')
-    rplidar_dir = get_package_share_directory('rplidar_ros')
 
-    # Component Launches
-    webcam_launch = IncludeLaunchDescription(
+    # --- Shared bringup (static TFs, roomba driver, RPLidar, Foxglove) ---
+    bringup = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            os.path.join(roomba_dir, 'launch', 'webcam.launch.py')
+            os.path.join(roomba_dir, 'launch', 'bringup.launch.py')
         )
     )
 
-    rplidar_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(rplidar_dir, 'launch', 'rplidar_c1_custom.launch.py')
-        )
-    )
-
-    # Core Nodes
-    roomba_node = Node(
-        package='roomba',
-        executable='roomba_node',
-        name='roomba_node',
-        output='screen'
-    )
-
-    # SLAM & Visualization
-    foxglove_bridge = Node(
-        package='foxglove_bridge',
-        executable='foxglove_bridge',
-        name='foxglove_bridge',
-        output='screen'
-    )
-
+    # --- SLAM Toolbox ---
     slam_toolbox = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            os.path.join(get_package_share_directory('slam_toolbox'), 'launch', 'online_async_launch.py')
+            os.path.join(
+                get_package_share_directory('slam_toolbox'),
+                'launch', 'online_async_launch.py'
+            )
         ),
         launch_arguments={
             'use_sim_time': 'False',
-            'slam_params_file': os.path.join(get_package_share_directory('slam_toolbox'), 'config', 'mapper_params_online_async.yaml'),
-            'base_frame': 'base_link',
-            
+            'slam_params_file': os.path.join(
+                roomba_dir, 'config', 'slam_params.yaml'
+            ),
         }.items()
     )
 
-    # Static Transforms (Modify Z-heights or frames as needed for your physical robot)
-    static_tf_laser = Node(
-        package='tf2_ros',
-        executable='static_transform_publisher',
-        name='base_to_laser',
-        arguments=['0.02', '0', '0.2', '0', '0', '0', 'base_link', 'laser']
-    )
-    
-    static_tf_camera = Node(
-        package='tf2_ros',
-        executable='static_transform_publisher',
-        name='base_to_camera',
-        arguments=['0.05', '0', '0.1', '0', '0', '0', 'base_link', 'camera_link']
-    )
-    
-    static_tf_footprint = Node(
-        package='tf2_ros',
-        executable='static_transform_publisher',
-        name='footprint_to_link',
-        arguments=['0', '0', '0', '0', '0', '0', 'base_footprint', 'base_link']
-    )
-
     return LaunchDescription([
-        roomba_node,
-        rplidar_launch,
-        webcam_launch,
-        foxglove_bridge,
+        bringup,
         slam_toolbox,
-        static_tf_laser,
-        static_tf_camera,
-        static_tf_footprint
     ])

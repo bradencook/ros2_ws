@@ -430,6 +430,10 @@ def read_stream(continuous=True):
 # (choose ones useful for mapping + odometry)
 SENSOR_PACKETS = [
     7,   # Bumps and wheel drops
+    9,   # Cliff Left (bool)
+    10,  # Cliff Front Left (bool)
+    11,  # Cliff Front Right (bool)
+    12,  # Cliff Right (bool)
     17,  # IR omni
     19,  # Distance
     20,  # Angle
@@ -439,6 +443,7 @@ SENSOR_PACKETS = [
     24,  # Temperature
     25,  # Battery charge
     26,  # Battery capacity
+    34,  # Charging Sources Available (home_base detection)
     43,  # Left encoder counts
     44,  # Right encoder counts
     52,  # IR Left
@@ -448,6 +453,10 @@ SENSOR_PACKETS = [
 # Packet sizes from OI spec
 PACKET_SIZES = {
     7: 1,
+    9: 1,
+    10: 1,
+    11: 1,
+    12: 1,
     17: 1,
     19: 2,
     20: 2,
@@ -457,6 +466,7 @@ PACKET_SIZES = {
     24: 1,
     25: 2,
     26: 2,
+    34: 1,
     43: 2,
     44: 2,
     52: 1,
@@ -474,6 +484,18 @@ def decode_packet(packet_id, data):
             "wheel_drop_right": bool(bumps & 0x04),
             "wheel_drop_left": bool(bumps & 0x08),
         }
+    elif packet_id == 9:
+        return {"cliff_left": bool(data[0])}
+
+    elif packet_id == 10:
+        return {"cliff_front_left": bool(data[0])}
+
+    elif packet_id == 11:
+        return {"cliff_front_right": bool(data[0])}
+
+    elif packet_id == 12:
+        return {"cliff_right": bool(data[0])}
+
     elif packet_id == 17:
         return {"ir_omni": data[0]}
 
@@ -500,6 +522,13 @@ def decode_packet(packet_id, data):
 
     elif packet_id == 26:
         return {"battery_capacity_mah": struct.unpack(">H", data)[0]}
+    elif packet_id == 34:
+        # Charging Sources Available: bit 0 = internal charger plugged in,
+        # bit 1 = home base detected (robot is sitting on dock).
+        return {
+            "internal_charger": bool(data[0] & 0x01),
+            "home_base": bool(data[0] & 0x02),
+        }
     elif packet_id == 43:
         return {"encoder_left": struct.unpack(">H", data)[0]}
     elif packet_id == 44:

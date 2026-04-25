@@ -1,0 +1,59 @@
+slam_toolbox:
+  ros__parameters:
+    # Frame configuration
+    odom_frame: odom
+    map_frame: map
+    base_frame: base_link
+    scan_topic: /scan
+    use_scan_matching: true
+    mode: mapping
+
+    # TF timing — generous timeout for serial-driven odom
+    transform_timeout: 0.5
+    tf_buffer_duration: 30.0
+
+    # Scan processing
+    max_laser_range: 12.0          # conservative for RPLidar C1
+    min_laser_range: 0.15
+    minimum_travel_distance: 0.3   # meters before processing a new scan
+    minimum_travel_heading: 0.3    # radians before processing a new scan
+    scan_buffer_size: 10
+
+    # Map resolution
+    resolution: 0.05
+
+    # Solver
+    solver_plugin: solver_plugins::CeresSolver
+    ceres_linear_solver: SPARSE_NORMAL_CHOLESKY
+    ceres_preconditioner: SCHUR_JACOBI
+    ceres_trust_strategy: LEVENBERG_MARQUARDT
+    ceres_dogleg_type: TRADITIONAL_DOGLEG
+    ceres_loss_function: None
+
+    # Scan matching tuning
+    loop_search_maximum_distance: 3.0
+    do_loop_closing: true
+    loop_match_minimum_chain_size: 10
+    loop_match_maximum_variance_coarse: 3.0
+    loop_match_minimum_response_coarse: 0.35
+    loop_match_minimum_response_fine: 0.45
+
+    # Correlation search (how far the matcher looks for scan alignment)
+    correlation_search_space_dimension: 0.5
+    correlation_search_space_resolution: 0.01
+    correlation_search_space_smear_deviation: 0.1
+
+    # Loop closure search
+    loop_search_space_dimension: 8.0
+    loop_search_space_resolution: 0.05
+    loop_search_space_smear_deviation: 0.03
+
+    # Performance
+    throttle_scans: 1
+    enable_interactive_mode: true
+    use_scan_barycenter: true
+    use_response_expansion: false
+
+    # Update intervals
+    map_update_interval: 3.0
+    transform_publish_period: 0.02   # 50Hz TF publish rate

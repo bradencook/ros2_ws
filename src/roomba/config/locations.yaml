@@ -1,0 +1,100 @@
+# Named locations on the map. Poses are in the map frame.
+# x, y in meters; yaw in radians (0 = +X, pi/2 = +Y).
+#
+# Populate by driving to a spot and calling save_location:
+#   ros2 topic pub --once /action/command std_msgs/String \
+#     "data: '{\"action\": \"save_location\", \"name\": \"kitchen\"}'"
+#
+# This file is rewritten on each save.
+
+locations:
+  bathroom_view:
+    type: viewpoint
+    x: -5.191273178131164
+    y: 6.306206807477398
+    yaw: 1.58659352706189
+  desk_view:
+    type: viewpoint
+    x: 1.4887858599394328
+    y: 1.2781067779919328
+    yaw: -3.0987965514315237
+  dock:
+    type: viewpoint
+    x: -0.3120079543375097
+    y: 0.00915723883058428
+    yaw: 0.05158563499870299
+  fireplace_view:
+    type: viewpoint
+    x: -4.884063606939264
+    y: 3.979419434365746
+    yaw: -2.3231173332712394
+  hallway_view:
+    type: viewpoint
+    x: -5.987149191804558
+    y: 6.683099981051798
+    yaw: 3.108472703056797
+  hallway_walkway:
+    type: position
+    x: -5.987149191804558
+    y: 6.683099981051798
+    yaw: 3.108472703056797
+  kitchen:
+    type: position
+    x: -2.332752493518199
+    y: 8.567079892051247
+    yaw: 1.616461751951998
+  kitchen_sink:
+    type: position
+    x: 0.6134886915609639
+    y: 9.1186794430675
+    yaw: -1.4254686157498047
+  living_room:
+    type: position
+    x: -4.884063606939264
+    y: 3.979419434365746
+    yaw: -2.323122005650767
+  office:
+    type: position
+    x: -0.030178575963054483
+    y: 1.9075594249510859
+    yaw: -0.540454650745261
+  piano:
+    type: position
+    x: -2.138804837656686
+    y: 4.560431748295103
+    yaw: -1.397117101812218
+  pinball_machine:
+    type: position
+    x: 1.2596826407851804
+    y: 6.628520675935046
+    yaw: -1.3604472739344475
+  ping_pong_table:
+    type: position
+    x: -0.5580220266137205
+    y: 4.353281421680048
+    yaw: -1.3750471415789025
+  record_player_view:
+    type: viewpoint
+    x: -4.878471077286148
+    y: 3.9826539300144472
+    yaw: -3.0445347423476683
+  storage_room_view:
+    type: viewpoint
+    x: 0.5887662579092656
+    y: 5.509545355267941
+    yaw: -0.02610885894183723
+  theater_room_view:
+    type: viewpoint
+    x: -2.332752493518199
+    y: 8.567079892051247
+    yaw: 1.6164617517010862
+  tree:
+    type: position
+    x: 1.4887858599394328
+    y: 1.2781067779919328
+    yaw: -3.0987450277371575
+  tv:
+    type: position
+    x: -4.462197746127161
+    y: 2.532414376580461
+    yaw: -0.0006755713136180188

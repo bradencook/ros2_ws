@@ -1,0 +1,39 @@
+ekf_filter_node:
+  ros__parameters:
+    frequency: 30.0
+    sensor_timeout: 0.1
+    two_d_mode: true          # force z, roll, pitch to zero (ground robot)
+
+    map_frame: map
+    odom_frame: odom
+    base_link_frame: base_link
+    world_frame: odom
+    publish_tf: true          # EKF owns odom -> base_link now
+
+    # Wheel odometry: trust forward (x) velocity only.
+    # Encoders are accurate for distance traveled, but wheel-derived heading
+    # drifts on carpet due to slip during in-place turns.
+    odom0: /wheel/odometry
+    odom0_config: [false, false, false,   # x, y, z           (ignore integrated pose)
+                   false, false, false,   # roll, pitch, yaw  (ignore)
+                   true,  false, false,   # vx, vy, vz        (use vx only)
+                   false, false, false,   # vroll, vpitch, vyaw
+                   false, false, false]   # ax, ay, az
+    odom0_queue_size: 10
+    odom0_nodelay: true
+    odom0_differential: false
+    odom0_relative: false
+
+    # IMU: trust yaw (absolute orientation) and yaw rate (gyro).
+    # Ignore linear accel — too noisy to integrate into position usefully.
+    imu0: /imu/data
+    imu0_config: [false, false, false,    # x, y, z
+                  false, false, true,     # roll, pitch, yaw  (use yaw)
+                  false, false, false,    # vx, vy, vz
+                  false, false, true,     # vroll, vpitch, vyaw  (use yaw rate)
+                  false, false, false]    # ax, ay, az
+    imu0_queue_size: 10
+    imu0_nodelay: true
+    imu0_differential: false
+    imu0_relative: true                   # first IMU reading -> yaw = 0
+    imu0_remove_gravitational_acceleration: false   # BNO08x linear_accel already gravity-free

@@ -12,7 +12,9 @@ setup(
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
-        (os.path.join('share', package_name, 'launch'), glob(os.path.join('launch', '*launch.[pxy][yma]*')))
+        (os.path.join('share', package_name, 'launch'), glob(os.path.join('launch', '*launch.[pxy][yma]*'))),
+        (os.path.join('share', package_name, 'config'), glob(os.path.join('config', '*.yaml'))),
+        (os.path.join('share', package_name, 'maps'), glob(os.path.join('maps', '*')))
     ],
     install_requires=['setuptools'],
     zip_safe=True,
@@ -25,6 +27,11 @@ setup(
         'console_scripts': [
             'roomba_node = roomba.roomba_node:main',
             'roomba_teleop = roomba.roomba_teleop:main',
+            'imu_node = roomba.imu_node:main',
+            'action_executor = roomba.action_executor:main',
+            'bump_obstacle_node = roomba.bump_obstacle_node:main',
+            'reasoning_node = roomba.reasoning_node:main',
+            'telegram_node = roomba.telegram_node:main',
         ],
     },
 )

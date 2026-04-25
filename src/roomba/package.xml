@@ -3,14 +3,27 @@
 <package format="3">
   <name>roomba</name>
   <version>0.0.0</version>
-  <description>The roomba package</description>
+  <description>Roomba robot driver, teleop, and launch files</description>
   <maintainer email="user@todo.todo">user</maintainer>
   <license>TODO: License declaration</license>
 
+  <!-- Core ROS 2 -->
   <depend>rclpy</depend>
   <depend>std_msgs</depend>
   <depend>geometry_msgs</depend>
+  <depend>nav_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>tf2_ros</depend>
+
+  <!-- Hardware -->
   <depend>pyserial</depend>
+
+  <!-- Launch dependencies -->
+  <exec_depend>rplidar_ros</exec_depend>
+  <exec_depend>slam_toolbox</exec_depend>
+  <exec_depend>nav2_bringup</exec_depend>
+  <exec_depend>robot_localization</exec_depend>
+  <exec_depend>foxglove_bridge</exec_depend>
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>

@@ -1,34 +1,21 @@
 from launch import LaunchDescription
-from launch_ros.actions import Node
+from launch.actions import ExecuteProcess
 
 def generate_launch_description():
-    return LaunchDescription([
-        Node(
-            package='v4l2_camera',
-            executable='v4l2_camera_node',
-            name='webcam',
-            output='screen',
-            parameters=[{
-                'video_device': '/dev/video0',
-                'image_size': [640, 480],
-                'framerate': 30,
-                'pixel_format': 'YUYV',
-                'qos_overrides./image_raw.publisher.reliability': 'best_effort',
-                'qos_overrides./image_raw.publisher.history': 'keep_last',
-                'qos_overrides./image_raw.publisher.depth': 1,
-                'qos_overrides./camera_info.publisher.reliability': 'best_effort',
-                'qos_overrides./camera_info.publisher.history': 'keep_last',
-                'qos_overrides./camera_info.publisher.depth': 1,
-            }],
-        ),
-        Node(
-            package='web_video_server',
-            executable='web_video_server',
-            name='web_video_server',
-            output='screen',
-            parameters=[{
-                'port': 8080,
-                'address': '0.0.0.0',
-            }],
-        )
-    ])
+    # ustreamer: lightweight MJPG-HTTP streamer, reads hardware MJPG directly.
+    # Near-zero CPU. Supports multiple clients. Auto-reconnects.
+    # View at http://<roomba-ip>:8080/stream
+    streamer = ExecuteProcess(
+        cmd=[
+            'ustreamer',
+            '--device', '/dev/video0',
+            '--host', '0.0.0.0',
+            '--port', '8080',
+            '--resolution', '640x480',
+            '--format', 'MJPEG',
+            '--desired-fps', '15',
+        ],
+        output='screen',
+    )
+
+    return LaunchDescription([streamer])

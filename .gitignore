@@ -1,2 +1,23 @@
-venv
-build
+# --- ROS / colcon ---
+build/
+install/
+log/
+
+# --- Python ---
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+
+# --- Editors / IDEs ---
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# --- Local secrets ---
+.env
+*.env.local
+.roomba-env

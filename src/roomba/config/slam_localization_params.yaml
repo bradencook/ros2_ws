@@ -1,0 +1,69 @@
+# slam_toolbox in localization mode. Replaces AMCL.
+#
+# Loads the serialized posegraph and .data from the mapping session and does
+# full scan-to-map matching on every update. Stronger than AMCL's particle
+# filter when wheel odom is noisy (carpet slip) because every correction uses
+# the actual scan geometry instead of sampling velocity hypotheses.
+
+slam_toolbox:
+  ros__parameters:
+    # --- Mode ---
+    mode: localization
+    # Absolute path to serialized map (no extension — reads .posegraph + .data).
+    # Points at install/share so colcon build picks up fresh maps.
+    map_file_name: /home/ubuntu/ros2_ws/install/roomba/share/roomba/maps/home
+    # Start pose. Robot should be docked at map origin on launch.
+    map_start_pose: [0.0, 0.0, 0.0]
+
+    # --- Frames ---
+    odom_frame: odom
+    map_frame: map
+    base_frame: base_link
+    scan_topic: /scan
+    use_scan_matching: true
+
+    # --- TF timing ---
+    transform_timeout: 0.5
+    tf_buffer_duration: 30.0
+    transform_publish_period: 0.02   # 50Hz map->odom publish
+
+    # --- Scan params ---
+    max_laser_range: 12.0
+    min_laser_range: 0.15
+    # Tighter than mapping (0.3 -> 0.1): localization benefits from more frequent
+    # scan updates since it's not adding to a posegraph, just correcting drift.
+    minimum_travel_distance: 0.1
+    minimum_travel_heading: 0.1
+    scan_buffer_size: 10
+
+    resolution: 0.05
+
+    # --- Solver (matches mapping config) ---
+    solver_plugin: solver_plugins::CeresSolver
+    ceres_linear_solver: SPARSE_NORMAL_CHOLESKY
+    ceres_preconditioner: SCHUR_JACOBI
+    ceres_trust_strategy: LEVENBERG_MARQUARDT
+    ceres_dogleg_type: TRADITIONAL_DOGLEG
+    ceres_loss_function: None
+
+    # --- Scan match correlation search ---
+    correlation_search_space_dimension: 0.5
+    correlation_search_space_resolution: 0.01
+    correlation_search_space_smear_deviation: 0.1
+
+    # --- Loop closure (still useful to snap back from large drift) ---
+    do_loop_closing: true
+    loop_search_maximum_distance: 3.0
+    loop_match_minimum_chain_size: 10
+    loop_match_maximum_variance_coarse: 3.0
+    loop_match_minimum_response_coarse: 0.35
+    loop_match_minimum_response_fine: 0.45
+    loop_search_space_dimension: 8.0
+    loop_search_space_resolution: 0.05
+    loop_search_space_smear_deviation: 0.03
+
+    # --- Performance ---
+    throttle_scans: 1
+    use_scan_barycenter: true
+    use_response_expansion: false
+    map_update_interval: 3.0
